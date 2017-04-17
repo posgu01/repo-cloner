@@ -1,5 +1,5 @@
 class Milestone
-    attr_accessor :title, :state, :description, :due_on
+    attr_accessor :title, :state, :description, :due_on, :number
 end
 
 class Label
