@@ -16,6 +16,10 @@ module Puts
     def Puts.debug(msg)
         puts msg.blue
     end
+
+    def Puts.prompt(msg)
+        puts msg.magenta
+    end
 end
 
 module Print
@@ -33,5 +37,9 @@ module Print
 
     def Print.debug(msg)
         print msg.blue
+    end
+
+    def Print.prompt(msg)
+        print msg.magenta
     end
 end

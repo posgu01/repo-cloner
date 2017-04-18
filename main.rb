@@ -3,35 +3,24 @@ require 'pp'
 
 require_relative 'models'
 require_relative 'puts'
+require_relative 'error_messages'
 
-Print.debug "Enter your GitHub username: "
+Print.prompt "Enter your GitHub username: "
 username = gets.strip
 
-Print.debug "Enter your GitHub personal access token: "
+Print.prompt "Enter your GitHub personal access token: "
 personal_token =  gets.strip
 #"9eba99280b103d8e389efb1d718be4d611be283e"
 
-Print.debug "Enter the project you want to clone from: "
+Print.prompt "Enter the project you want to clone from: "
 from = gets.strip
 #from = "posgu01/dummy-repo"
 
-Print.debug "Enter the project you want to clone to: "
+Print.prompt "Enter the project you want to clone to: "
 to = gets.strip
 #to = "posgu01/dummy-repo-2"
 
 baseUrl = "https://api.github.com"
-
-def errorRetrievingAsset(assets, code)
-    Puts.error "There was an error retrieving the #{assets} from Github. Code: #{code}."
-end
-
-def errorCreatingAsset(assets, code)
-    Puts.error "There was an error creating the #{assets} in the new repo. Code: #{code}."
-end
-
-def assetAlreadyExists(asset)
-    Puts.warn "The #{asset} creation request failed validation. It may already exist in the new repo."
-end
 
 # Get All Labels
 
@@ -39,7 +28,7 @@ labelsResponse = Unirest.get "#{baseUrl}/repos/#{from}/labels",
                              auth: { username: username, password: personal_token }
 
 if labelsResponse.code >= 300
-    errorRetrievingAsset("labels", labelsResponse.code)
+    Error.retrieving_asset("labels", labelsResponse.code)
     exit 1
 end
 
@@ -57,7 +46,7 @@ milestoneResponse = Unirest.get "#{baseUrl}/repos/#{from}/milestones",
                                 auth: { username: username, password: personal_token }
 
 if milestoneResponse.code >= 300
-    errorRetrievingAsset("milestones", milestoneResponse.code)
+    Error.retrieving_asset("milestones", milestoneResponse.code)
     exit 1
 end
 
@@ -78,7 +67,7 @@ issueResponse = Unirest.get "#{baseUrl}/repos/#{from}/issues",
                             auth: { username: username, password: personal_token }
 
 if issueResponse.code >= 300
-    errorRetrievingAsset("issues", issueResponse.code)
+    Error.retrieving_asset("issues", issueResponse.code)
     exit 1
 end
 
@@ -114,10 +103,10 @@ labels.each do |label|
     if labelCreationResponse.code >= 300
         if labelCreationResponse.code == 422
             Puts.warn "Warning!"
-            assetAlreadyExists("label")
+            Error.asset_exists("label")
         else
             Puts.error "Failure!"
-            errorCreatingAsset("label", labelCreationResponse.code)
+            Error.creating_asset("label", labelCreationResponse.code)
         end
     else
         Puts.info "Success!"
@@ -130,7 +119,7 @@ existingMilestoneResponse = Unirest.get "#{baseUrl}/repos/#{to}/milestones",
                                 auth: { username: username, password: personal_token }
 
 if existingMilestoneResponse.code >= 300
-    errorRetrievingAsset("milestones", milestoneResponse.code)
+    Error.retrieving_asset("milestones", milestoneResponse.code)
     exit 1
 end
 
@@ -161,7 +150,7 @@ milestones.each do |milestone|
     if milestoneCreationResponse.code >= 300
         if milestoneCreationResponse.code == 422
             Puts.warn "Warning!"
-            assetAlreadyExists("milestone")
+            Error.asset_exists("milestone")
             if existingMilestones.select { |ms| ms.title == milestone.title } != []
                 milestone.number = existingMilestones.select {|ms| ms.title == milestone.title}.first.number
             else
@@ -170,7 +159,7 @@ milestones.each do |milestone|
             end
         else
             Puts.error "Failure!"
-            errorCreatingAsset("milestone", milestoneCreationResponse.code)
+            Error.create_asset("milestone", milestoneCreationResponse.code)
         end
     else
         milestone.number = milestoneCreationResponse.body["number"]
@@ -202,10 +191,10 @@ issues.reverse.each do |issue|
     if issueCreationResponse.code >= 300
         if issueCreationResponse.code == 422
             Puts.warn "Warning!"
-            assetAlreadyExists("issue")
+            Error.asset_exists("issue")
         else
             Puts.error "Failure!"
-            errorCreatingAsset("milestone", issueCreationResponse.code)
+            Error.creating_asset("milestone", issueCreationResponse.code)
         end
     else
         Puts.info "Success!"
